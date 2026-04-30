@@ -1,6 +1,4 @@
 package ar.edu.uba.hogar.auth.service.impl;
-
-import ar.edu.uba.hogar.auth.enums.RolesEnum;
 import ar.edu.uba.hogar.auth.enums.UserStatusEnum;
 import ar.edu.uba.hogar.auth.exception.DoorbellException;
 import ar.edu.uba.hogar.auth.exception.ExceptionEnum;
@@ -44,11 +42,10 @@ public class AuthServiceImpl implements AuthService {
             throw new DoorbellException(ExceptionEnum.USER_ALREADY_EXISTS);
         }
 
-        // 2. Creamos el usuario con rol OWNER y contraseña hasheada
+        // 2. Creamos el usuario y contraseña hasheada
         AuthUser user = new AuthUser();
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(RolesEnum.OWNER);
         user.setStatus(UserStatusEnum.ACTIVE);
 
         AuthUser saved = authUserRepository.save(user);
@@ -84,7 +81,6 @@ public class AuthServiceImpl implements AuthService {
         JwtPayload payload = JwtPayload.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
-                .role(user.getRole())
                 .build();
 
         String token = jwtService.generateToken(payload);
@@ -100,33 +96,6 @@ public class AuthServiceImpl implements AuthService {
     public JwtPayload validateToken(String token) {
         // Delega al JwtService que verifica la firma y expiración
         return jwtService.validateToken(token);
-    }
-
-    // ──────────────────────────────────────────────
-    // INVITAR CONTACTO (el OWNER agrega un TRUSTED_CONTACT)
-    // ──────────────────────────────────────────────
-    @Override
-    @Transactional
-    public RegisterResponseDTO inviteContact(InviteContactRequestDTO request) {
-        // 1. Verificamos que el email no esté ya registrado
-        if (authUserRepository.existsByEmail(request.getContactEmail())) {
-            throw new DoorbellException(ExceptionEnum.USER_ALREADY_EXISTS);
-        }
-
-        // 2. Creamos el usuario con rol TRUSTED_CONTACT
-        //    Sin contraseña por ahora: el contacto la establece via reset de contraseña
-        AuthUser contact = new AuthUser();
-        contact.setEmail(request.getContactEmail());
-        contact.setPasswordHash(""); // se establece cuando el contacto hace el reset
-        contact.setRole(RolesEnum.TRUSTED_CONTACT);
-        contact.setStatus(UserStatusEnum.INACTIVE); // queda inactivo hasta que establezca su contraseña
-
-        AuthUser saved = authUserRepository.save(contact);
-        log.info("TRUSTED_CONTACT invited: {}", saved.getEmail());
-
-        // TODO: acá iría el envío del email de invitación (paso 8)
-
-        return toRegisterResponse(saved);
     }
 
     // ──────────────────────────────────────────────
@@ -207,7 +176,6 @@ public class AuthServiceImpl implements AuthService {
         return RegisterResponseDTO.builder()
                 .id(user.getId())
                 .email(user.getEmail())
-                .role(user.getRole())
                 .status(user.getStatus())
                 .build();
     }

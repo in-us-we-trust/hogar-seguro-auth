@@ -1,6 +1,15 @@
 spring:
   application:
     name: auth-service
+  cloud:
+    config:
+      enabled: false  # <--- AGREGA ESTA LÍNEA
+  config:
+    import: "optional:configserver:" # <--- AGREGA ESTA LÍNEA (evita el error que viste)
+
+    # ... el resto de tu configuración (datasource, jpa, etc.) sigue igual
+    # BORRAR LUEGO----------------
+
 
   # CONFIGURACIÓN BASE DE DATOS TEMPORAL (H2)
   datasource:
@@ -42,3 +51,5 @@ logging:
   level:
     ar.edu.uba.hogar: DEBUG
     org.springframework.security: DEBUG
+
+

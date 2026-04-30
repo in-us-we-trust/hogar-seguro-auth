@@ -1,6 +1,5 @@
 package ar.edu.uba.hogar.auth.service.impl;
 
-import ar.edu.uba.hogar.auth.enums.RolesEnum;
 import ar.edu.uba.hogar.auth.exception.DoorbellException;
 import ar.edu.uba.hogar.auth.exception.ExceptionEnum;
 import ar.edu.uba.hogar.auth.model.dto.JwtPayload;
@@ -37,7 +36,6 @@ public class JwtServiceImpl implements JwtService {
         return Jwts.builder()
                 .setSubject(payload.getEmail())
                 .claim("userId", payload.getUserId().toString())
-                .claim("role", payload.getRole().name())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -56,7 +54,6 @@ public class JwtServiceImpl implements JwtService {
             return JwtPayload.builder()
                     .email(claims.getSubject())
                     .userId(UUID.fromString(claims.get("userId", String.class)))
-                    .role(RolesEnum.valueOf(claims.get("role", String.class)))
                     .build();
 
         } catch (ExpiredJwtException e) {

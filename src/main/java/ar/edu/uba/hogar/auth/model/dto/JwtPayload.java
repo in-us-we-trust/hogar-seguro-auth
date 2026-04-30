@@ -1,7 +1,6 @@
 package ar.edu.uba.hogar.auth.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import ar.edu.uba.hogar.auth.enums.RolesEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +22,4 @@ public class JwtPayload {
     @Schema(description = "User email", example = "vonneumann@hotmail.com")
     private String email;
 
-    @Schema(description = "User role", example = "OWNER")
-    private RolesEnum role;
 }
