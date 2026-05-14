@@ -19,7 +19,10 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable);
+                .formLogin(AbstractHttpConfigurer::disable)
+                // Deshabilitamos el filtro JWT de Spring Security.
+                // La validación del token la hacemos nosotros manualmente en JwtServiceImpl.
+                .oauth2ResourceServer(AbstractHttpConfigurer::disable);
 
         return http.build();
     }

@@ -1,13 +1,17 @@
 package ar.edu.uba.hogar.auth.service.impl;
+
 import ar.edu.uba.hogar.auth.enums.UserStatusEnum;
 import ar.edu.uba.hogar.auth.exception.DoorbellException;
 import ar.edu.uba.hogar.auth.exception.ExceptionEnum;
 import ar.edu.uba.hogar.auth.model.dto.*;
 import ar.edu.uba.hogar.auth.model.entity.AuthUser;
 import ar.edu.uba.hogar.auth.model.entity.PasswordReset;
+import ar.edu.uba.hogar.auth.model.entity.RefreshToken;
 import ar.edu.uba.hogar.auth.repository.AuthUserRepository;
 import ar.edu.uba.hogar.auth.repository.PasswordResetRepository;
+import ar.edu.uba.hogar.auth.repository.RefreshTokenRepository;
 import ar.edu.uba.hogar.auth.service.AuthService;
+import ar.edu.uba.hogar.auth.service.EmailService;
 import ar.edu.uba.hogar.auth.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,13 +27,15 @@ import java.util.UUID;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    private final AuthUserRepository   authUserRepository;
+    private final AuthUserRepository      authUserRepository;
     private final PasswordResetRepository passwordResetRepository;
-    private final PasswordEncoder      passwordEncoder;
-    private final JwtService           jwtService;
+    private final RefreshTokenRepository  refreshTokenRepository;
+    private final PasswordEncoder         passwordEncoder;
+    private final JwtService              jwtService;
+    private final EmailService            emailService;
 
-    // Tiempo de expiración del token de reset: 1 hora
     private static final int PASSWORD_RESET_EXPIRATION_MINUTES = 60;
+    private static final int REFRESH_TOKEN_EXPIRATION_DAYS     = 30;
 
     // ──────────────────────────────────────────────
     // REGISTRO
@@ -37,56 +43,53 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public RegisterResponseDTO registerUser(RegisterRequestDTO request) {
-        // 1. Verificamos que el email no esté ya registrado
         if (authUserRepository.existsByEmail(request.getEmail())) {
             throw new DoorbellException(ExceptionEnum.USER_ALREADY_EXISTS);
         }
 
-        // 2. Creamos el usuario y contraseña hasheada
         AuthUser user = new AuthUser();
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setStatus(UserStatusEnum.ACTIVE);
 
         AuthUser saved = authUserRepository.save(user);
-        log.info("New OWNER registered: {}", saved.getEmail());
+        log.info("New user registered: {}", saved.getEmail());
 
         return toRegisterResponse(saved);
     }
 
     // ──────────────────────────────────────────────
-    // LOGIN
+    // LOGIN — devuelve accessToken + refreshToken
     // ──────────────────────────────────────────────
     @Override
+    @Transactional
     public LoginResponseDTO loginUser(LoginRequestDTO request) {
-        // 1. Buscamos el usuario por email (solo activos/bloqueados, no eliminados)
         AuthUser user = authUserRepository.findActiveUserByEmail(request.getEmail())
                 .orElseThrow(() -> new DoorbellException(ExceptionEnum.USER_NOT_FOUND));
 
-        // 2. Verificamos que no esté bloqueado
         if (user.getStatus() == UserStatusEnum.BLOCKED) {
             throw new DoorbellException(ExceptionEnum.USER_BLOCKED);
         }
 
-        // 3. Verificamos la contraseña con BCrypt
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new DoorbellException(ExceptionEnum.INVALID_CREDENTIALS);
         }
 
-        // 4. Actualizamos el último login
         user.setLastLogin(LocalDateTime.now());
         authUserRepository.save(user);
 
-        // 5. Generamos el JWT con los datos del usuario
+        // Generam el JWT (corta duración, definida en yml)
         JwtPayload payload = JwtPayload.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
                 .build();
+        String accessToken = jwtService.generateToken(payload);
 
-        String token = jwtService.generateToken(payload);
+        // Refresh token (larga duración, 30 días)
+        String refreshToken = generateAndSaveRefreshToken(user);
+
         log.info("User logged in: {}", user.getEmail());
-
-        return new LoginResponseDTO(token);
+        return new LoginResponseDTO(accessToken, refreshToken);
     }
 
     // ──────────────────────────────────────────────
@@ -94,8 +97,58 @@ public class AuthServiceImpl implements AuthService {
     // ──────────────────────────────────────────────
     @Override
     public JwtPayload validateToken(String token) {
-        // Delega al JwtService que verifica la firma y expiración
         return jwtService.validateToken(token);
+    }
+
+    // ──────────────────────────────────────────────
+    // REFRESH TOKEN — renueva el accessToken
+    // ──────────────────────────────────────────────
+    @Override
+    @Transactional
+    public LoginResponseDTO refreshToken(RefreshRequestDTO request) {
+        // 1. Buscamos el refresh token en la BD
+        RefreshToken stored = refreshTokenRepository.findByToken(request.getRefreshToken())
+                .orElseThrow(() -> new DoorbellException(ExceptionEnum.TOKEN_INVALID));
+
+        // 2. Verificamos que no haya expirado
+        if (LocalDateTime.now().isAfter(stored.getExpiresAt())) {
+            refreshTokenRepository.delete(stored);
+            throw new DoorbellException(ExceptionEnum.TOKEN_EXPIRED);
+        }
+
+        AuthUser user = stored.getAuthUser();
+
+        if (user.getStatus() == UserStatusEnum.BLOCKED) {
+            throw new DoorbellException(ExceptionEnum.USER_BLOCKED);
+        }
+
+        // 3. Generamos nuevo accessToken
+        JwtPayload payload = JwtPayload.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .build();
+        String newAccessToken = jwtService.generateToken(payload);
+
+        // 4. Rotamos el refresh token (buena práctica de seguridad:
+        //    cada refresh genera un token nuevo, el viejo queda inválido)
+        refreshTokenRepository.delete(stored);
+        String newRefreshToken = generateAndSaveRefreshToken(user);
+
+        log.info("Token refreshed for: {}", user.getEmail());
+        return new LoginResponseDTO(newAccessToken, newRefreshToken);
+    }
+
+    // ──────────────────────────────────────────────
+    // LOGOUT — invalida el refresh token
+    // ──────────────────────────────────────────────
+    @Override
+    @Transactional
+    public void logout(RefreshRequestDTO request) {
+        RefreshToken stored = refreshTokenRepository.findByToken(request.getRefreshToken())
+                .orElseThrow(() -> new DoorbellException(ExceptionEnum.TOKEN_INVALID));
+
+        refreshTokenRepository.delete(stored);
+        log.info("User logged out: {}", stored.getAuthUser().getEmail());
     }
 
     // ──────────────────────────────────────────────
@@ -111,23 +164,19 @@ public class AuthServiceImpl implements AuthService {
             throw new DoorbellException(ExceptionEnum.USER_BLOCKED);
         }
 
-        // Generamos un token UUID único para el reset
+        // Si ya tenía un reset pendiente, lo reemplazamos
+        passwordResetRepository.findByAuthUser(user)
+                .ifPresent(passwordResetRepository::delete);
+        passwordResetRepository.flush();
+
         PasswordReset reset = new PasswordReset();
         reset.setAuthUser(user);
         reset.setToken(UUID.randomUUID());
         reset.setCreatedAt(LocalDateTime.now());
-
-        // Si ya tenía un reset pendiente, lo reemplazamos
-        if (user.getPasswordReset() != null) {
-            passwordResetRepository.delete(user.getPasswordReset());
-        }
         passwordResetRepository.save(reset);
 
-        log.info("Password reset requested for: {}", user.getEmail());
-
-        // TODO: acá iría el envío del email con el token (paso 8)
-        // Por ahora lo logueamos para poder probarlo
-        log.info("Password reset token (DEV ONLY): {}", reset.getToken());
+        // Enviamos el email (real con Brevo, o dummy en local)
+        emailService.sendPasswordResetEmail(user.getEmail(), reset.getToken().toString());
 
         return new PasswordResetResponseDTO("Password reset email sent successfully");
     }
@@ -138,11 +187,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void updatePassword(PasswordUpdateRequestDTO request) {
-        // 1. Buscamos el token de reset
         PasswordReset reset = passwordResetRepository.findByToken(request.getToken())
                 .orElseThrow(() -> new DoorbellException(ExceptionEnum.PASSWORD_TOKEN_NOT_FOUND));
 
-        // 2. Verificamos que no haya expirado
         LocalDateTime expiration = reset.getCreatedAt()
                 .plusMinutes(PASSWORD_RESET_EXPIRATION_MINUTES);
         if (LocalDateTime.now().isAfter(expiration)) {
@@ -152,26 +199,31 @@ public class AuthServiceImpl implements AuthService {
 
         AuthUser user = reset.getAuthUser();
 
-        // 3. Verificamos que la nueva contraseña sea diferente a la actual
         if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
             throw new DoorbellException(ExceptionEnum.ALREADY_USED_PASSWORD);
         }
 
-        // 4. Actualizamos la contraseña y activamos el usuario (por si era INACTIVE)
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         user.setStatus(UserStatusEnum.ACTIVE);
         user.setUpdatedAt(LocalDateTime.now());
         authUserRepository.save(user);
 
-        // 5. Eliminamos el token de reset usado
         passwordResetRepository.delete(reset);
-
         log.info("Password updated for: {}", user.getEmail());
     }
 
     // ──────────────────────────────────────────────
-    // HELPER
+    // HELPERS PRIVADOS
     // ──────────────────────────────────────────────
+    private String generateAndSaveRefreshToken(AuthUser user) {
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setAuthUser(user);
+        refreshToken.setToken(UUID.randomUUID());
+        refreshToken.setExpiresAt(LocalDateTime.now().plusDays(REFRESH_TOKEN_EXPIRATION_DAYS));
+        refreshTokenRepository.save(refreshToken);
+        return refreshToken.getToken().toString();
+    }
+
     private RegisterResponseDTO toRegisterResponse(AuthUser user) {
         return RegisterResponseDTO.builder()
                 .id(user.getId())

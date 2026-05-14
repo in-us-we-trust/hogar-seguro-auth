@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,14 +65,23 @@ public class AuthController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ExceptionContent.class)))
     })
+
+
     @GetMapping("/validate")
     public ResponseEntity<StandardResponse<JwtPayload>> validate(
-            @RequestHeader("Authorization") String authHeader) {
-        // El header llega como "Bearer eyJhbG..." — sacamos el prefijo
-        String token = authHeader.replace("Bearer ", "");
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        // Validación básica del header
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String token = authHeader.substring(7); // Más eficiente que replace
         var response = authService.validateToken(token);
+
         return ResponseEntity.ok(StandardResponse.of(response));
     }
+
 
     @Operation(summary = "Solicitar reset de contraseña",
             description = "Envía un email con el link para resetear la contraseña")

@@ -10,6 +10,10 @@ public interface AuthService {
 
     JwtPayload validateToken(String token);
 
+    LoginResponseDTO refreshToken(RefreshRequestDTO request);
+
+    void logout(RefreshRequestDTO request);
+
     PasswordResetResponseDTO requestPasswordReset(PasswordResetRequestDTO request);
 
     void updatePassword(PasswordUpdateRequestDTO request);
