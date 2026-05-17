@@ -1,6 +1,5 @@
 package ar.edu.uba.hogar.auth.model.dto;
 
-import ar.edu.uba.hogar.auth.enums.RolesEnum;
 import ar.edu.uba.hogar.auth.enums.UserStatusEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -19,9 +18,6 @@ public class RegisterResponseDTO {
 
     @Schema(description = "User email", example = "vonneumann@hotmail.com")
     private String email;
-
-    @Schema(description = "User role", example = "OWNER")
-    private RolesEnum role;
 
     @Schema(description = "User status", example = "ACTIVE")
     private UserStatusEnum status;

@@ -1,6 +1,5 @@
 package ar.edu.uba.hogar.auth.model.entity;
 
-import ar.edu.uba.hogar.auth.enums.RolesEnum;
 import ar.edu.uba.hogar.auth.enums.UserStatusEnum;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -24,15 +23,11 @@ public class AuthUser {
     @Column(nullable = false)
     private String passwordHash;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String lastName;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private RolesEnum role;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
