@@ -164,16 +164,20 @@ public class AuthServiceImpl implements AuthService {
             throw new DoorbellException(ExceptionEnum.USER_BLOCKED);
         }
 
-        // Si ya tenía un reset pendiente, lo reemplazamos
-        passwordResetRepository.findByAuthUser(user)
-                .ifPresent(passwordResetRepository::delete);
-        passwordResetRepository.flush();
-
-        PasswordReset reset = new PasswordReset();
-        reset.setAuthUser(user);
-        reset.setToken(UUID.randomUUID());
-        reset.setCreatedAt(LocalDateTime.now());
-        passwordResetRepository.save(reset);
+        
+        PasswordReset reset = passwordResetRepository.findByAuthUser(user)
+            .map(existing -> {
+                existing.setToken(UUID.randomUUID());
+                existing.setCreatedAt(LocalDateTime.now());
+                return passwordResetRepository.save(existing);
+            })
+            .orElseGet(() -> {
+                PasswordReset p = new PasswordReset();
+                p.setAuthUser(user);
+                p.setToken(UUID.randomUUID());
+                p.setCreatedAt(LocalDateTime.now());
+                return passwordResetRepository.save(p);
+            });
 
         // Enviamos el email (real con Brevo, o dummy en local)
         emailService.sendPasswordResetEmail(user.getEmail(), reset.getToken().toString());
@@ -216,6 +220,13 @@ public class AuthServiceImpl implements AuthService {
     // HELPERS PRIVADOS
     // ──────────────────────────────────────────────
     private String generateAndSaveRefreshToken(AuthUser user) {
+        try {
+            refreshTokenRepository.deleteByAuthUserId(user.getId());
+        } catch (Exception e) {
+           
+            log.debug("No existing refresh token to delete for user {}: {}", user.getEmail(), e.getMessage());
+        }
+
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setAuthUser(user);
         refreshToken.setToken(UUID.randomUUID());
