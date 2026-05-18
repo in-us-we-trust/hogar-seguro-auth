@@ -50,13 +50,14 @@ Las propiedades principales se encuentran en `src/main/resources/application.yml
 - `APP_RESET_PASSWORD_URL` (URL pública para el link de reset)
 
 Ejemplo (bash) antes de ejecutar:
+- En caso de no usar email_provider dummy. Usar un proveedor de email real (`EMAIL_PROVIDER=brevo`) y configurar `BREVO_API_KEY`.
 
 ```bash
 export AUTH_PORT=8081
 export DB_URL=jdbc:postgresql://localhost:5432/authdb
 export DB_USERNAME=auth
 export DB_PASSWORD=secret
-export JWT_SECRET="clave_muy_secreta_de_32_caracteres_o_mas"
+export JWT_SECRET="clave_secreta"
 export EMAIL_PROVIDER=dummy
 ```
 
@@ -108,23 +109,8 @@ export EMAIL_PROVIDER=dummy
   "newPassword": "NuevoPassword123!"
 }
 ```
-
-Nota: todas las respuestas exitosas están envueltas en `StandardResponse<T>`.
-
 **H2 Console**
 - Si usa la DB en memoria por defecto, la consola H2 está habilitada en `/h2-console`.
 
 **Swagger / OpenAPI**
 - Springdoc está incluido; la UI suele estar disponible en `/swagger-ui/index.html` o `/swagger-ui.html`.
-
-**Buenas prácticas / seguridad**
-- Nunca exponer `JWT_SECRET` en repositorios.
-- Usar HTTPS en entornos de producción.
-- Usar un proveedor de email real (`EMAIL_PROVIDER=brevo`) y configurar `BREVO_API_KEY`.
-
-**Contacto / mantenimiento**
-- Equipo: Backend
-- Para dudas o cambios en este servicio, abrir un issue o hablar con el responsable del módulo.
-
----
-Archivo creado automáticamente: `hogar-seguro-auth/README.md`
