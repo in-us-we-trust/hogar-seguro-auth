@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  auth-db-test:
+    image: postgres:16
+    container_name: auth-service-db-test
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: test_db
+      TZ: UTC
+
+    ports:
+      - "5431:5432"
+
+    networks:
+      - auth-test-net
+
+  auth-service-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+
+    container_name: auth-service-test
+
+    depends_on:
+      - auth-db-test
+
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+
+      DB_URL: jdbc:postgresql://auth-db-test:5432/test_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+
+      JWT_SECRET: test-secret-key-minimum-32-characters-123456
+      JWT_EXPIRATION_MS: 3600000
+
+      EMAIL_PROVIDER: dummy
+      BREVO_API_KEY: test-api-key
+      BREVO_API_URL: https://api.brevo.com/v3/smtp/email
+      BREVO_SENDER_NAME: Auth Service Test
+      BREVO_SENDER_EMAIL: test@example.com
+
+      APP_RESET_PASSWORD_URL: http://localhost:3000/reset-password
+
+    command: mvn test
+
+    networks:
+      - auth-test-net
+
+networks:
+  auth-test-net:
+    driver: bridge
