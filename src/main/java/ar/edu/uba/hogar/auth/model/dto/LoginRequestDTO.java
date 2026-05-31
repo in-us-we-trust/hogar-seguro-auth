@@ -14,12 +14,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LoginRequestDTO {
 
-    @Schema(description = "User email", example = "vonneumann@hotmail.com")
-    @NotBlank(message = "El email es requerido")
-    @Email(message = "El email debe ser válido")
-    private String email;
+  @Schema(description = "User email", example = "vonneumann@hotmail.com")
+  @NotBlank(message = "El email es requerido")
+  @Email(message = "El email debe ser válido")
+  private String email;
 
-    @Schema(description = "User password", example = "MiPassword123!")
-    @NotBlank(message = "La contraseña es requerida")
-    private String password;
+  @Schema(description = "User password", example = "MiPassword123!")
+  @NotBlank(message = "La contraseña es requerida")
+  private String password;
 }

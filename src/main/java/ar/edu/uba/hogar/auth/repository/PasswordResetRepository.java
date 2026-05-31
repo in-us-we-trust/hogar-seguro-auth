@@ -1,4 +1,5 @@
 package ar.edu.uba.hogar.auth.repository;
+
 import ar.edu.uba.hogar.auth.model.entity.AuthUser;
 import ar.edu.uba.hogar.auth.model.entity.PasswordReset;
 import java.time.LocalDateTime;
@@ -13,11 +14,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PasswordResetRepository extends JpaRepository<PasswordReset, Long> {
 
-    Optional<PasswordReset> findByToken(UUID token);
+  Optional<PasswordReset> findByToken(UUID token);
 
-    @Modifying
-    @Query("DELETE FROM PasswordReset pr WHERE pr.createdAt < :expirationTime")
-    int deleteExpiredTokens(@Param("expirationTime") LocalDateTime expirationTime);
+  @Modifying
+  @Query("DELETE FROM PasswordReset pr WHERE pr.createdAt < :expirationTime")
+  int deleteExpiredTokens(@Param("expirationTime") LocalDateTime expirationTime);
 
-    Optional<PasswordReset> findByAuthUser(AuthUser user);
+  Optional<PasswordReset> findByAuthUser(AuthUser user);
 }
