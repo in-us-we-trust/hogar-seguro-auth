@@ -2,7 +2,7 @@ name: CD (Deploy Auth Service to Cloud Run)
 
 on:
   push:
-    branches: ["master"]
+    branches: ["main"]
   workflow_dispatch:
 
 env:
