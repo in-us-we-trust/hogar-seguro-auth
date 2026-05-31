@@ -11,12 +11,12 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class DummyEmailServiceImpl implements EmailService {
 
-    @Override
-    public void sendPasswordResetEmail(String toEmail, String resetToken) {
-        log.info("==================================================");
-        log.info("[DUMMY EMAIL] Para: {}", toEmail);
-        log.info("[DUMMY EMAIL] Token de reset: {}", resetToken);
-        log.info("[DUMMY EMAIL] Usá este token en /auth/password-update");
-        log.info("==================================================");
-    }
+  @Override
+  public void sendPasswordResetEmail(String toEmail, String resetToken) {
+    log.info("==================================================");
+    log.info("[DUMMY EMAIL] Para: {}", toEmail);
+    log.info("[DUMMY EMAIL] Token de reset: {}", resetToken);
+    log.info("[DUMMY EMAIL] Usá este token en /auth/password-update");
+    log.info("==================================================");
+  }
 }

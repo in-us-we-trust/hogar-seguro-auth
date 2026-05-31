@@ -15,13 +15,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RegisterRequestDTO {
 
-    @Schema(description = "User email", example = "vonneumann@hotmail.com")
-    @NotBlank(message = "El email es requerido")
-    @Email(message = "El email debe ser válido")
-    private String email;
+  @Schema(description = "User email", example = "vonneumann@hotmail.com")
+  @NotBlank(message = "El email es requerido")
+  @Email(message = "El email debe ser válido")
+  private String email;
 
-    @Schema(description = "User password (min 8 characters)", example = "MiPassword123!")
-    @NotBlank(message = "La contraseña es requerida")
-    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
-    private String password;
+  @Schema(description = "User password (min 8 characters)", example = "MiPassword123!")
+  @NotBlank(message = "La contraseña es requerida")
+  @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
+  private String password;
 }

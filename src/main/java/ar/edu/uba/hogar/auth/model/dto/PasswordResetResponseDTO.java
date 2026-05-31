@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PasswordResetResponseDTO {
 
-    @Schema(description = "Mensaje de confirmación", example = "Password reset email sent successfully")
-    private String message;
+  @Schema(
+      description = "Mensaje de confirmación",
+      example = "Password reset email sent successfully")
+  private String message;
 }

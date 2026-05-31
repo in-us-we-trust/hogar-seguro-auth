@@ -14,8 +14,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PasswordResetRequestDTO {
 
-    @Schema(description = "Email del usuario que quiere resetear su contraseña", example = "vonneumann@hotmail.com")
-    @NotBlank(message = "El email es requerido")
-    @Email(message = "El email debe ser válido")
-    private String email;
+  @Schema(
+      description = "Email del usuario que quiere resetear su contraseña",
+      example = "vonneumann@hotmail.com")
+  @NotBlank(message = "El email es requerido")
+  @Email(message = "El email debe ser válido")
+  private String email;
 }

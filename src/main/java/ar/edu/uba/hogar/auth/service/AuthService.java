@@ -4,17 +4,17 @@ import ar.edu.uba.hogar.auth.model.dto.*;
 
 public interface AuthService {
 
-    RegisterResponseDTO registerUser(RegisterRequestDTO request);
+  RegisterResponseDTO registerUser(RegisterRequestDTO request);
 
-    LoginResponseDTO loginUser(LoginRequestDTO request);
+  LoginResponseDTO loginUser(LoginRequestDTO request);
 
-    JwtPayload validateToken(String token);
+  JwtPayload validateToken(String token);
 
-    LoginResponseDTO refreshToken(RefreshRequestDTO request);
+  LoginResponseDTO refreshToken(RefreshRequestDTO request);
 
-    void logout(RefreshRequestDTO request);
+  void logout(RefreshRequestDTO request);
 
-    PasswordResetResponseDTO requestPasswordReset(PasswordResetRequestDTO request);
+  PasswordResetResponseDTO requestPasswordReset(PasswordResetRequestDTO request);
 
-    void updatePassword(PasswordUpdateRequestDTO request);
+  void updatePassword(PasswordUpdateRequestDTO request);
 }
