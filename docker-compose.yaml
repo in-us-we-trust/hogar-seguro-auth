@@ -3,7 +3,7 @@ version: "3.9"
 services:
   auth-db-test:
     image: postgres:16
-    container_name: auth-service-db-test
+    container_name: hogar-seguro-auth-db-test
 
     environment:
       POSTGRES_USER: postgres
@@ -17,12 +17,12 @@ services:
     networks:
       - auth-test-net
 
-  auth-service-test:
+  hogar-seguro-auth-test:
     build:
       context: .
       dockerfile: Dockerfile.test
 
-    container_name: auth-service-test
+    container_name: hogar-seguro-auth-test
 
     depends_on:
       - auth-db-test

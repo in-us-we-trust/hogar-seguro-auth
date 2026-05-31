@@ -9,9 +9,9 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: ${{ secrets.GCP_REGION }}
 
-  SERVICE: auth-service
+  SERVICE: hogar-seguro-auth
 
-  IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tp-hogar-seguro/auth-service
+  IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tp-hogar-seguro/hogar-seguro-auth
 
 jobs:
   deploy:

@@ -5,15 +5,18 @@
 **Propósito**: Provee endpoints para registro, login, validación de JWT y manejo de reset de contraseña.
 
 **Contenido rápido**
+
 - Build: `./mvnw clean package`
-- Ejecutar: `./mvnw spring-boot:run` o `java -jar target/auth-service-0.0.1-SNAPSHOT.jar`
+- Ejecutar: `./mvnw spring-boot:run` o `java -jar target/hogar-seguro-auth-0.0.1-SNAPSHOT.jar`
 - Puerto por defecto: `8081` (variable `AUTH_PORT`)
 
 **Requisitos**
+
 - Java 21
 - Maven (o usar el wrapper `./mvnw` incluido)
 
 **Cómo ejecutar localmente**
+
 1. Construir:
 
 ```bash
@@ -25,7 +28,7 @@
 ```bash
 ./mvnw spring-boot:run
 # o
-java -jar target/auth-service-0.0.1-SNAPSHOT.jar
+java -jar target/hogar-seguro-auth-0.0.1-SNAPSHOT.jar
 ```
 
 3. Ejecutar tests:
@@ -50,6 +53,7 @@ Las propiedades principales se encuentran en `src/main/resources/application.yml
 - `APP_RESET_PASSWORD_URL` (URL pública para el link de reset)
 
 Ejemplo (bash) antes de ejecutar:
+
 - En caso de no usar email_provider dummy. Usar un proveedor de email real (`EMAIL_PROVIDER=brevo`) y configurar `BREVO_API_KEY`.
 
 ```bash
@@ -74,7 +78,8 @@ export EMAIL_PROVIDER=dummy
   "password": "MiPassword123!"
 }
 ```
-  - Response: `201 Created` con `RegisterResponseDTO` envuelto en `StandardResponse`.
+
+- Response: `201 Created` con `RegisterResponseDTO` envuelto en `StandardResponse`.
 
 - POST `/auth/login` — Iniciar sesión
   - Request JSON:
@@ -85,7 +90,8 @@ export EMAIL_PROVIDER=dummy
   "password": "MiPassword123!"
 }
 ```
-  - Response: `200 OK` con `accessToken` y `refreshToken` (`LoginResponseDTO`).
+
+- Response: `200 OK` con `accessToken` y `refreshToken` (`LoginResponseDTO`).
 
 - GET `/auth/validate` — Validar token
   - Header: `Authorization: Bearer <accessToken>`
@@ -109,8 +115,11 @@ export EMAIL_PROVIDER=dummy
   "newPassword": "NuevoPassword123!"
 }
 ```
+
 **H2 Console**
+
 - Si usa la DB en memoria por defecto, la consola H2 está habilitada en `/h2-console`.
 
 **Swagger / OpenAPI**
+
 - Springdoc está incluido; la UI suele estar disponible en `/swagger-ui/index.html` o `/swagger-ui.html`.

@@ -24,7 +24,7 @@ jobs:
           echo "Waiting for PostgreSQL..."
 
           for i in {1..30}; do
-            if docker exec auth-service-db-test pg_isready -U postgres -d test_db; then
+            if docker exec hogar-seguro-auth-db-test pg_isready -U postgres -d test_db; then
               echo "PostgreSQL is ready!"
               exit 0
             fi
@@ -36,16 +36,16 @@ jobs:
 
       - name: Build test container
         run: |
-          docker compose -f docker-compose.test.yml build auth-service-test
+          docker compose -f docker-compose.test.yml build hogar-seguro-auth-test
 
       - name: Run Spotless check
         run: |
-          docker compose -f docker-compose.test.yml run --rm auth-service-test \
+          docker compose -f docker-compose.test.yml run --rm hogar-seguro-auth-test \
           mvn -B spotless:check
 
       - name: Run tests with coverage
         run: |
-          docker compose -f docker-compose.test.yml run --rm auth-service-test \
+          docker compose -f docker-compose.test.yml run --rm hogar-seguro-auth-test \
           mvn -B clean verify
 
       - name: Shutdown Docker Compose

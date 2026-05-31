@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ar.edu.uba.hogar</groupId>
-	<artifactId>auth-service</artifactId>
+	<artifactId>hogar-seguro-auth</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
 	<description/>
