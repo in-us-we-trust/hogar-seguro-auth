@@ -1,5 +1,6 @@
 package ar.edu.uba.hogar.auth.model.dto;
 
+import ar.edu.uba.hogar.auth.enums.UserStatusEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
@@ -22,4 +23,13 @@ public class JwtPayload {
 
   @Schema(description = "User email", example = "vonneumann@hotmail.com")
   private String email;
+
+  @Schema(description = "Nombre del usuario", example = "John")
+  private String firstName;
+
+  @Schema(description = "Apellido del usuario", example = "Doe")
+  private String lastName;
+
+  @Schema(description = "Estado del usuario", example = "ACTIVE")
+  private UserStatusEnum status;
 }

@@ -14,6 +14,8 @@ import ar.edu.uba.hogar.auth.service.AuthService;
 import ar.edu.uba.hogar.auth.service.EmailService;
 import ar.edu.uba.hogar.auth.service.JwtService;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -79,8 +81,11 @@ public class AuthServiceImpl implements AuthService {
     user.setLastLogin(LocalDateTime.now());
     authUserRepository.save(user);
 
-    // Generam el JWT (corta duración, definida en yml)
-    JwtPayload payload = JwtPayload.builder().userId(user.getId()).email(user.getEmail()).build();
+    // Si el request incluye datos de usuario de otro servicio, los usamos directamente.
+    // Si no, construimos el payload con los datos de la BD.
+    Map<String, Object> payload = (request.getUser() != null)
+        ? request.getUser()
+        : buildPayload(user);
     String accessToken = jwtService.generateToken(payload);
 
     // Refresh token (larga duración, 30 días)
@@ -94,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
   // VALIDAR TOKEN
   // ──────────────────────────────────────────────
   @Override
-  public JwtPayload validateToken(String token) {
+  public Map<String, Object> validateToken(String token) {
     return jwtService.validateToken(token);
   }
 
@@ -123,8 +128,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     // 3. Generamos nuevo accessToken
-    JwtPayload payload = JwtPayload.builder().userId(user.getId()).email(user.getEmail()).build();
-    String newAccessToken = jwtService.generateToken(payload);
+    String newAccessToken = jwtService.generateToken(buildPayload(user));
 
     // 4. Rotamos el refresh token (buena práctica de seguridad:
     //    cada refresh genera un token nuevo, el viejo queda inválido)
@@ -247,5 +251,15 @@ public class AuthServiceImpl implements AuthService {
         .email(user.getEmail())
         .status(user.getStatus())
         .build();
+  }
+
+  private Map<String, Object> buildPayload(AuthUser user) {
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("userId", user.getId().toString());
+    payload.put("email", user.getEmail());
+    payload.put("firstName", user.getFirstName());
+    payload.put("lastName", user.getLastName());
+    payload.put("status", user.getStatus() != null ? user.getStatus().name() : null);
+    return payload;
   }
 }

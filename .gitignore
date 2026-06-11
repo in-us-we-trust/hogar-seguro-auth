@@ -34,6 +34,7 @@ build/
 
 # Variables locales
 src/main/resources/application-local.yml
+.env
 
 # Logs
 *.log

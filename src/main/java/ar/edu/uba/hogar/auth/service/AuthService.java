@@ -1,6 +1,7 @@
 package ar.edu.uba.hogar.auth.service;
 
 import ar.edu.uba.hogar.auth.model.dto.*;
+import java.util.Map;
 
 public interface AuthService {
 
@@ -8,7 +9,7 @@ public interface AuthService {
 
   LoginResponseDTO loginUser(LoginRequestDTO request);
 
-  JwtPayload validateToken(String token);
+  Map<String, Object> validateToken(String token);
 
   LoginResponseDTO refreshToken(RefreshRequestDTO request);
 

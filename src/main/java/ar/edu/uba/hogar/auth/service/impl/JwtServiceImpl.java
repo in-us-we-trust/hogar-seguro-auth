@@ -2,13 +2,12 @@ package ar.edu.uba.hogar.auth.service.impl;
 
 import ar.edu.uba.hogar.auth.exception.DoorbellException;
 import ar.edu.uba.hogar.auth.exception.ExceptionEnum;
-import ar.edu.uba.hogar.auth.model.dto.JwtPayload;
 import ar.edu.uba.hogar.auth.service.JwtService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.UUID;
+import java.util.Map;
 import javax.crypto.SecretKey;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,19 +20,17 @@ public class JwtServiceImpl implements JwtService {
   private final SecretKey secretKey;
   private final long expirationMs;
 
-  // Inyecta los valores del application.yml
   public JwtServiceImpl(
-      @Value("${jwt.secret}") String secret, @Value("${jwt.expiration-ms}") long expirationMs) {
-    // Convierte el string del yml en una clave criptográfica HMAC-SHA256
+      @Value("${jwt.secret}") String secret,
+      @Value("${jwt.expiration-ms}") long expirationMs) {
     this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     this.expirationMs = expirationMs;
   }
 
   @Override
-  public String generateToken(JwtPayload payload) {
+  public String generateToken(Map<String, Object> payload) {
     return Jwts.builder()
-        .setSubject(payload.getEmail())
-        .claim("userId", payload.getUserId().toString())
+        .claim("user", payload)
         .setIssuedAt(new Date())
         .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
         .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -41,15 +38,13 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public JwtPayload validateToken(String token) {
+  @SuppressWarnings("unchecked")
+  public Map<String, Object> validateToken(String token) {
     try {
       Claims claims =
           Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
 
-      return JwtPayload.builder()
-          .email(claims.getSubject())
-          .userId(UUID.fromString(claims.get("userId", String.class)))
-          .build();
+      return claims.get("user", Map.class);
 
     } catch (ExpiredJwtException e) {
       log.warn("Token expirado: {}", e.getMessage());

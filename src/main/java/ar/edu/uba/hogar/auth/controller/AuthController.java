@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -93,7 +94,7 @@ public class AuthController {
                     schema = @Schema(implementation = ExceptionContent.class)))
       })
   @GetMapping("/validate")
-  public ResponseEntity<StandardResponse<JwtPayload>> validate(
+  public ResponseEntity<StandardResponse<Map<String, Object>>> validate(
       @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
     // Validación básica del header
