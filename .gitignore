@@ -39,3 +39,6 @@ src/main/resources/application-local.yml
 # Logs
 *.log
 logs/
+
+# Local helper scripts
+run.sh
